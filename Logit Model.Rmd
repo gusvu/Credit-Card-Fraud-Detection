@@ -1,0 +1,59 @@
+---
+title: "Logit Model"
+author: "Gus Vu"
+date: "`r Sys.Date()`"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+rm(list = ls())
+
+#load in data
+NewData <- read.csv("C:/Users/gusvu/OneDrive/Desktop/Projects/Creditr Card/NewData.csv")
+```
+
+# Testing / Training Split.
+
+The next step is to split our data into an 80/20 training testing split. In other words we will train a model on 80% of our data and test how accurate our model is on the remaining 20%. We do this because we want to avoid over fitting our model. If we trained and tested on the same data set we would inflate our accuracy. We have a split beacause we want to test our model on new data. We want to test our model on data that it has not seen before.
+
+```{r}
+library(caTools)
+set.seed(123)
+data_sample = sample.split(NewData$Class,SplitRatio=0.80)
+train_data = subset(NewData,data_sample==TRUE)
+test_data = subset(NewData,data_sample==FALSE)
+```
+
+# Fitting Logistic Regression Model
+
+A logistic regression model is used to model 2 outcomes success (fraud) or fail (not fraud). 
+
+- Note we must be careful when interpreting this model as a logit model predicts log odds of success. We need to do a transformation if we want to get probabilities.
+
+
+```{r}
+Logistic_Model=glm(Class~.,train_data,family=binomial())
+summary(Logistic_Model)
+```
+
+
+Lets visualize our model
+```{r}
+plot(Logistic_Model)
+```
+
+Our residual vs Fitted plot looks good. There is a little deviation but the residuals are more or less distributed around 0. We have a few outliers but this is ok since our data is large.  Our normal QQ plot looks good also, our data more or less follows a straight line but has small deviation at the end points. Our scale location plot shows a relatively horizontal red line, this means that we have more or less equal variance.
+
+Lastly Our cooks plot shows that we have only a few highly influential  points / outliers. This is more or less neglagable since our data is so large.
+
+
+Lets look at an ROC curve. Also known as a Receiver Optimistic Characteristics. This plots the sensitivity $\frac{\text{TP}}{\text{TP+FN}}$ and the specificity $\frac{\text{TN}}{\text{TN+FP}}$. The red line represents a random choince. Since there is only 2 possible outcomes heads or tails. We want the area under our ROC curve (the blue line) to be greater then the area under the red line. 
+```{r}
+library(pROC)
+lr.predict <- predict(Logistic_Model,test_data, probability = TRUE)
+auc.gbm = roc(test_data$Class, lr.predict, plot = TRUE, col = "blue")
+auc.gbm$auc
+```
+
+We observe that the area under the curve is .9748, this is much better than random choice of 0.5.
