@@ -1,0 +1,57 @@
+---
+title: "Gradient Boosting"
+author: "Gus Vu"
+date: "`r Sys.Date()`"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+rm(list = ls())
+```
+
+# Gradient Boosting
+
+A GBM  model is comprises of several underlying ensemble models like weak decision trees. These decision trees combine together to form a strong model of gradient boosting.
+
+```{r}
+library(gbm, quietly=TRUE)
+
+# Get the time to train the GBM model
+system.time(
+       model_gbm <- gbm(Class ~ .
+               , distribution = "bernoulli"
+               , data = rbind(train_data, test_data)
+               , n.trees = 500
+               , interaction.depth = 3
+               , n.minobsinnode = 100
+               , shrinkage = 0.01
+               , bag.fraction = 0.5
+               , train.fraction = nrow(train_data) / (nrow(train_data) + nrow(test_data))
+)
+)
+# Determine best iteration based on test data
+gbm.iter = gbm.perf(model_gbm, method = "test")
+```
+
+The iteration vs Bernuli deviance shows us the performance of the model vs the number of trees. If we had an infinite amount of trees the model would perform well but would over fit. The blue line shows us the optimal amount of trees. 
+
+Plot the gbm model
+```{r}
+model.influence = relative.influence(model_gbm, n.trees = gbm.iter, sort. = TRUE)
+
+plot(model_gbm)
+```
+Partial dependence plots (PDP) show the dependence between the target response and a set of input features of interest, marginalizing over the values of all other input features (the ‘complement’ features). Intuitively, we can interpret the partial dependence as the expected target response as a function of the input features of interest.
+
+Plot and calculate AUC on test data
+```{r}
+gbm_test = predict(model_gbm, newdata = test_data, n.trees = gbm.iter)
+gbm_auc = roc(test_data$Class, gbm_test, plot = TRUE, col = "red")
+```
+
+```{r}
+gbm_auc$auc
+```
+
+We see that the area under the curve is much more acurate than a random choice of 0.5.
