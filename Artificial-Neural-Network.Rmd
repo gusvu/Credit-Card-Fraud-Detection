@@ -1,0 +1,32 @@
+---
+title: "Artificial Neural Network"
+author: "Gus Vu"
+date: "`r Sys.Date()`"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+rm(list = ls())
+test_data <- read.csv("C:/Users/gusvu/OneDrive/Desktop/Projects/Creditr Card/test_data.csv")
+train_data <- read.csv("C:/Users/gusvu/OneDrive/Desktop/Projects/Creditr Card/train_data.csv")
+```
+
+# Artificial Neural Network
+
+ANN's are a type of machine learning algorithm that are modeled after the human nervous system. The ANN models are able to learn the patterns using the historical data and are able to perform classification on the input data. There is a range of values that is between 1 and 0. We set a threshold as 0.5, that is, values above 0.5 will correspond to 1 and the rest will be 0.
+
+```{r}
+library(neuralnet)
+ANN_model =neuralnet (Class~.,train_data,linear.output=FALSE)
+plot(ANN_model)
+
+predANN=compute(ANN_model,test_data)
+resultANN=predANN$net.result
+resultANN=ifelse(resultANN>0.5,1,0)
+```
+
+```{r}
+mean(resultANN==test_data$Class)
+```
+We observe that our ANN model is highly accurate with an acuracy of 0.9993504.
