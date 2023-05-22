@@ -1,0 +1,32 @@
+---
+title: "Decision Tree Model"
+author: "Gus Vu"
+date: "`r Sys.Date()`"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+rm(list = ls())
+creditcard <- read.csv("C:/Users/gusvu/OneDrive/Desktop/Projects/Creditr Card/creditcard.csv")
+```
+
+# Fitting a Decision Tree Model
+
+A decision tree works by classifying an observation into categories in multiple steps, or branches of a tree. The tree will choose a variable and a threshold for that variable. If the observation is over/ under the threshold then the tree decides it is more or less likely to fit in one category. This will make more sense once I plot the tree.
+
+```{r}
+library(rpart)
+library(rpart.plot)
+decisionTree_model <- rpart(Class ~ . , creditcard, method = 'class')
+predicted_val <- predict(decisionTree_model, creditcard, type = 'class')
+probability <- predict(decisionTree_model, creditcard, type = 'prob')
+rpart.plot(decisionTree_model)
+```
+
+The nodes on the bottom represent the probabilities of 1 or 0 (fraud or not), given that the predicter variables meet the conditions of that branch. 
+
+```{r}
+mean(predicted_val == creditcard$Class)
+```
+We see that our acuracy is 0.9995471, and our decision tree model is highly effective.
